@@ -72,6 +72,7 @@ The following accounts are pre-loaded into `schema.sql` for testing:
 ---
 
 ## 5. Deployment Instructions
-1. Import `schema.sql` into a database named `student_portal`.
-2. Place all PHP files in `C:\wamp64\www\Software-Security\`.
-3. Open `http://localhost/Software-Security/` in your browser.
+1. Kena ada WAMPPPP
+2. Import `schema.sql` into a database named `student_portal`.
+3. Place all PHP files in `C:\wamp64\www\Software-Security\`.
+4. Open `http://localhost/Software-Security/` in your browser.
