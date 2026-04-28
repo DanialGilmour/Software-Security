@@ -37,7 +37,13 @@ $students = mysqli_query($conn, "SELECT id, name, email FROM users WHERE role = 
             
             <?php
             $sid = $s['id'];
-            $regs = mysqli_query($conn, "SELECT r.id, s.code, s.name, r.grade FROM registrations r JOIN subjects s ON r.subject_id = s.id WHERE r.user_id = $sid");
+            $stmt_regs = mysqli_prepare($conn, "SELECT r.id, s.code, s.name, r.grade 
+                                                FROM registrations r 
+                                                JOIN subjects s ON r.subject_id = s.id 
+                                                WHERE r.user_id = ?");
+            mysqli_stmt_bind_param($stmt_regs, "i", $sid);
+            mysqli_stmt_execute($stmt_regs);
+            $regs = mysqli_stmt_get_result($stmt_regs);
             ?>
             <table class="w-full text-left text-sm">
                 <thead><tr class="text-gray-500"><th>Course</th><th>Current Grade</th><th>Assign Grade</th></tr></thead>
