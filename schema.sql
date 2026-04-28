@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     role ENUM('registrar', 'lecturer', 'clerk', 'maintenance', 'student') DEFAULT 'student',
     mfa_secret VARCHAR(32) NULL,
+    failed_attempts INT DEFAULT 0,
+    locked_until DATETIME NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

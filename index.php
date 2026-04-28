@@ -10,22 +10,55 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = $_POST['email'];
     $password = $_POST['password'];
 
-    $stmt = mysqli_prepare($conn, "SELECT id, name, password, role FROM users WHERE email = ?");
+    $stmt = mysqli_prepare($conn, "SELECT id, name, password, role, mfa_secret, failed_attempts, locked_until FROM users WHERE email = ?");
     mysqli_stmt_bind_param($stmt, "s", $email);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
     
     if ($user = mysqli_fetch_assoc($result)) {
-        if (password_verify($password, $user['password'])) {
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user_name'] = $user['name'];
-            $_SESSION['user_role'] = $user['role'];
-            logActivity($user['id'], "LOGIN", "User logged in successfully");
-            header("Location: dashboard.php");
-            exit();
+        if ($user['locked_until'] !== null && strtotime($user['locked_until']) > time()) {
+            $error = "Account is locked. Try again later.";
+            logActivity($user['id'], "LOGIN_LOCKED", "Failed login on locked account");
+        } else {
+            if (password_verify($password, $user['password'])) {
+                $reset_stmt = mysqli_prepare($conn, "UPDATE users SET failed_attempts = 0, locked_until = NULL WHERE id = ?");
+                mysqli_stmt_bind_param($reset_stmt, "i", $user['id']);
+                mysqli_stmt_execute($reset_stmt);
+
+                if (!empty($user['mfa_secret'])) {
+                    $_SESSION['mfa_pending_user_id'] = $user['id'];
+                    $_SESSION['mfa_pending_user_name'] = $user['name'];
+                    $_SESSION['mfa_pending_user_role'] = $user['role'];
+                    header("Location: verify_mfa.php");
+                    exit();
+                } else {
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['user_name'] = $user['name'];
+                    $_SESSION['user_role'] = $user['role'];
+                    logActivity($user['id'], "LOGIN", "User logged in successfully");
+                    header("Location: dashboard.php");
+                    exit();
+                }
+            } else {
+                $attempts = $user['failed_attempts'] + 1;
+                $locked_until = null;
+                if ($attempts >= 5) {
+                    $locked_until = date('Y-m-d H:i:s', time() + 15 * 60);
+                    logActivity($user['id'], "ACCOUNT_LOCKED", "Account locked due to multiple failed login attempts");
+                }
+                $update_stmt = mysqli_prepare($conn, "UPDATE users SET failed_attempts = ?, locked_until = ? WHERE id = ?");
+                mysqli_stmt_bind_param($update_stmt, "isi", $attempts, $locked_until, $user['id']);
+                mysqli_stmt_execute($update_stmt);
+                
+                $error = "Invalid email or password.";
+                if ($attempts >= 5) {
+                    $error = "Account is locked. Try again later.";
+                }
+            }
         }
+    } else {
+        $error = "Invalid email or password.";
     }
-    $error = "Invalid email or password.";
 }
 ?>
 <!DOCTYPE html>

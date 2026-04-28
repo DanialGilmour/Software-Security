@@ -65,6 +65,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             </div>
             <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 font-bold">Update Password</button>
         </form>
+
+        <div class="mt-8 border-t pt-6">
+            <h3 class="text-xl font-bold mb-4">Two-Factor Authentication (2FA)</h3>
+            <p class="text-gray-600 mb-4">Add an extra layer of security to your account by enabling Two-Factor Authentication.</p>
+            <a href="setup_mfa.php" class="inline-block bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-900 font-bold">Manage 2FA</a>
+        </div>
     </div>
 </body>
 </html>
