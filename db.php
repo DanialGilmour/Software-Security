@@ -10,7 +10,19 @@ if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
 }
 
+session_set_cookie_params([
+    'httponly' => true, // Prevents JavaScript from stealing your session
+    'samesite' => 'Strict' // Prevents CSRF
+]);
 session_start();
+
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+function e($text) {
+    return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+}
 
 function logActivity($user_id, $action, $description = "") {
     global $conn;
