@@ -10,10 +10,21 @@ $success = "";
 $error = "";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['register_user'])) {
-    $name = $_POST['name'];
-    $email = $_POST['email'];
-    $password = password_hash($_POST['password'], PASSWORD_BCRYPT);
+    $name = trim($_POST['name']);
+    $email = trim($_POST['email']);
+    $raw_password = $_POST['password'];
     $role = $_POST['role'];
+
+    // Secure Input Validation & Buffer Size Checking
+    if (strlen($name) > 100 || strlen($email) > 100 || strlen($raw_password) > 255) {
+        $error = "Input exceeds allocated buffer size.";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = "Invalid email format.";
+    } elseif (strlen($raw_password) < 12 || !preg_match('/[A-Z]/', $raw_password) || !preg_match('/[^a-zA-Z\d]/', $raw_password)) {
+        // Password Complexity
+        $error = "Password must be at least 12 characters long, contain at least one uppercase letter, and one special character.";
+    } else {
+        $password = password_hash($raw_password, PASSWORD_BCRYPT);
 
     // Vertical Access ID Logic: Last digit determines access level
     $last_digit_map = [
@@ -46,6 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['register_user'])) {
     } else {
         $error = "Registration failed: " . mysqli_error($conn);
     }
+    } // Close the else block for input validation
 }
 
 $users = mysqli_query($conn, "SELECT id, name, email, role FROM users ORDER BY id ASC");
@@ -95,12 +107,12 @@ $users = mysqli_query($conn, "SELECT id, name, email, role FROM users ORDER BY i
                 <tbody>
                     <?php while($row = mysqli_fetch_assoc($users)): ?>
                     <tr class="border-b">
-                        <td class="p-2 font-mono font-bold"><?php echo $row['id']; ?></td>
-                        <td><?php echo $row['name']; ?></td>
-                        <td><?php echo $row['email']; ?></td>
+                        <td class="p-2 font-mono font-bold"><?php echo htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td><?php echo htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td><?php echo htmlspecialchars($row['email'], ENT_QUOTES, 'UTF-8'); ?></td>
                         <td>
                             <span class="px-2 py-1 rounded text-xs font-bold <?php echo $row['role']=='admin'?'bg-purple-100 text-purple-700':'bg-green-100 text-green-700';?>">
-                                <?php echo strtoupper($row['role']); ?>
+                                <?php echo htmlspecialchars(strtoupper($row['role']), ENT_QUOTES, 'UTF-8'); ?>
                             </span>
                         </td>
                     </tr>

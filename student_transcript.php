@@ -7,8 +7,11 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 'student') {
 }
 
 $user_id = $_SESSION['user_id'];
-$query = "SELECT s.code, s.name, s.credit_hours, r.grade FROM registrations r JOIN subjects s ON r.subject_id = s.id WHERE r.user_id = $user_id";
-$result = mysqli_query($conn, $query);
+$query = "SELECT s.code, s.name, s.credit_hours, r.grade FROM registrations r JOIN subjects s ON r.subject_id = s.id WHERE r.user_id = ?";
+$stmt = mysqli_prepare($conn, $query);
+mysqli_stmt_bind_param($stmt, "i", $user_id);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
 
 // Simple CGPA Calc
 $total_points = 0; $total_credits = 0;
@@ -31,10 +34,10 @@ $grade_map = ['A' => 4, 'B' => 3, 'C' => 2, 'D' => 1, 'F' => 0];
             <tbody>
                 <?php while($row = mysqli_fetch_assoc($result)): ?>
                 <tr class="border-b py-2">
-                    <td><?php echo $row['code']; ?></td>
-                    <td><?php echo $row['name']; ?></td>
-                    <td><?php echo $row['credit_hours']; ?></td>
-                    <td class="font-bold"><?php echo $row['grade'] ?? 'Pending'; ?></td>
+                    <td><?php echo htmlspecialchars($row['code'], ENT_QUOTES, 'UTF-8'); ?></td>
+                    <td><?php echo htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8'); ?></td>
+                    <td><?php echo htmlspecialchars($row['credit_hours'], ENT_QUOTES, 'UTF-8'); ?></td>
+                    <td class="font-bold"><?php echo htmlspecialchars($row['grade'] ?? 'Pending', ENT_QUOTES, 'UTF-8'); ?></td>
                 </tr>
                 <?php 
                     if (isset($grade_map[$row['grade']])) {

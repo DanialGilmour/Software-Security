@@ -22,7 +22,7 @@ $role = $_SESSION['user_role'];
     <nav class="bg-blue-600 text-white p-4 flex justify-between">
         <h1 class="font-bold">Student Portal</h1>
         <div>
-            <span>Welcome, <?php echo $_SESSION['user_name']; ?> (<?php echo ucfirst($role); ?>)</span>
+            <span>Welcome, <?php echo htmlspecialchars($_SESSION['user_name'], ENT_QUOTES, 'UTF-8'); ?> (<?php echo htmlspecialchars(ucfirst($role), ENT_QUOTES, 'UTF-8'); ?>)</span>
             <a href="logout.php" class="ml-4 underline">Logout</a>
         </div>
     </nav>

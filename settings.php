@@ -14,8 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $new_password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
 
-    if (strlen($new_password) < 12) {
-        $error = "Password must be at least 12 characters long.";
+    if (strlen($new_password) < 12 || !preg_match('/[A-Z]/', $new_password) || !preg_match('/[^a-zA-Z\d]/', $new_password)) {
+        $error = "Password must be at least 12 characters long, contain one uppercase letter, and one special character.";
     } elseif ($new_password !== $confirm_password) {
         $error = "Passwords do not match.";
     } else {

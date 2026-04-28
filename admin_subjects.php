@@ -20,7 +20,9 @@ if (isset($_POST['add_subject'])) {
 
 if (isset($_POST['delete_id'])) {
     $id = $_POST['delete_id'];
-    mysqli_query($conn, "DELETE FROM subjects WHERE id = $id");
+    $stmt = mysqli_prepare($conn, "DELETE FROM subjects WHERE id = ?");
+    mysqli_stmt_bind_param($stmt, "i", $id);
+    mysqli_stmt_execute($stmt);
     logActivity($_SESSION['user_id'], "DELETE_SUBJECT", "Deleted subject ID $id");
 }
 
@@ -56,12 +58,12 @@ $subjects = mysqli_query($conn, "SELECT * FROM subjects");
                 <tbody>
                     <?php while($row = mysqli_fetch_assoc($subjects)): ?>
                     <tr class="border-b">
-                        <td class="py-2"><?php echo $row['code']; ?></td>
-                        <td><?php echo $row['name']; ?></td>
-                        <td><?php echo $row['credit_hours']; ?></td>
+                        <td class="py-2"><?php echo htmlspecialchars($row['code'], ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td><?php echo htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td><?php echo htmlspecialchars($row['credit_hours'], ENT_QUOTES, 'UTF-8'); ?></td>
                         <td>
                             <?php if ($can_edit): ?>
-                            <form method="POST"><input type="hidden" name="delete_id" value="<?php echo $row['id']; ?>"><button type="submit" class="text-red-600">Delete</button></form>
+                            <form method="POST"><input type="hidden" name="delete_id" value="<?php echo htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8'); ?>"><button type="submit" class="text-red-600">Delete</button></form>
                             <?php else: ?>
                             <span class="text-gray-400 italic">View Only</span>
                             <?php endif; ?>

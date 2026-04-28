@@ -4,11 +4,22 @@ $user = 'root';
 $pass = '';
 $db   = 'student_portal';
 
-$conn = mysqli_connect($host, $user, $pass, $db);
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
+try {
+    $conn = mysqli_connect($host, $user, $pass, $db);
+} catch (mysqli_sql_exception $e) {
+    // Secure Exception Handling: Log error internally, show generic message to user
+    error_log($e->getMessage());
+    die("An error occurred while connecting to the database. Please try again later.");
 }
+
+// Automatic Resource Cleanup
+register_shutdown_function(function() use (&$conn) {
+    if (isset($conn) && $conn instanceof mysqli) {
+        mysqli_close($conn);
+    }
+});
 
 session_start();
 
@@ -26,5 +37,21 @@ function hasRole($roles) {
         return in_array($_SESSION['user_role'], $roles);
     }
     return $_SESSION['user_role'] === $roles;
+}
+
+// Sensitive Data Encryption
+define('ENCRYPTION_KEY', 'SecureKey123!@#SecureKey123!@#12'); // 32 chars for AES-256
+define('ENCRYPTION_METHOD', 'AES-256-CBC');
+
+function encryptData($data) {
+    $ivLength = openssl_cipher_iv_length(ENCRYPTION_METHOD);
+    $iv = openssl_random_pseudo_bytes($ivLength);
+    $encrypted = openssl_encrypt($data, ENCRYPTION_METHOD, ENCRYPTION_KEY, 0, $iv);
+    return base64_encode($encrypted . '::' . $iv);
+}
+
+function decryptData($data) {
+    list($encrypted_data, $iv) = explode('::', base64_decode($data), 2);
+    return openssl_decrypt($encrypted_data, ENCRYPTION_METHOD, ENCRYPTION_KEY, 0, $iv);
 }
 ?>

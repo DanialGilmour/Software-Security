@@ -27,12 +27,18 @@ if (isset($_POST['drop_id'])) {
 }
 
 // Get available subjects (not yet registered)
-$query = "SELECT * FROM subjects WHERE id NOT IN (SELECT subject_id FROM registrations WHERE user_id = $user_id)";
-$available = mysqli_query($conn, $query);
+$query = "SELECT * FROM subjects WHERE id NOT IN (SELECT subject_id FROM registrations WHERE user_id = ?)";
+$stmt_available = mysqli_prepare($conn, $query);
+mysqli_stmt_bind_param($stmt_available, "i", $user_id);
+mysqli_stmt_execute($stmt_available);
+$available = mysqli_stmt_get_result($stmt_available);
 
 // Get my subjects
-$query = "SELECT r.id as reg_id, s.code, s.name, s.credit_hours FROM registrations r JOIN subjects s ON r.subject_id = s.id WHERE r.user_id = $user_id";
-$my_subjects = mysqli_query($conn, $query);
+$query = "SELECT r.id as reg_id, s.code, s.name, s.credit_hours FROM registrations r JOIN subjects s ON r.subject_id = s.id WHERE r.user_id = ?";
+$stmt_my = mysqli_prepare($conn, $query);
+mysqli_stmt_bind_param($stmt_my, "i", $user_id);
+mysqli_stmt_execute($stmt_my);
+$my_subjects = mysqli_stmt_get_result($stmt_my);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -53,11 +59,11 @@ $my_subjects = mysqli_query($conn, $query);
                 <tbody>
                     <?php while($row = mysqli_fetch_assoc($available)): ?>
                     <tr class="border-b py-2">
-                        <td><?php echo $row['code']; ?></td>
-                        <td><?php echo $row['name']; ?></td>
-                        <td><?php echo $row['credit_hours']; ?></td>
+                        <td><?php echo htmlspecialchars($row['code'], ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td><?php echo htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td><?php echo htmlspecialchars($row['credit_hours'], ENT_QUOTES, 'UTF-8'); ?></td>
                         <td>
-                            <form method="POST"><input type="hidden" name="register_id" value="<?php echo $row['id']; ?>"><button type="submit" class="text-blue-600 hover:underline">Register</button></form>
+                            <form method="POST"><input type="hidden" name="register_id" value="<?php echo htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8'); ?>"><button type="submit" class="text-blue-600 hover:underline">Register</button></form>
                         </td>
                     </tr>
                     <?php endwhile; ?>
@@ -72,10 +78,10 @@ $my_subjects = mysqli_query($conn, $query);
                 <tbody>
                     <?php while($row = mysqli_fetch_assoc($my_subjects)): ?>
                     <tr class="border-b py-2">
-                        <td><?php echo $row['code']; ?></td>
-                        <td><?php echo $row['name']; ?></td>
+                        <td><?php echo htmlspecialchars($row['code'], ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td><?php echo htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8'); ?></td>
                         <td>
-                            <form method="POST"><input type="hidden" name="drop_id" value="<?php echo $row['reg_id']; ?>"><button type="submit" class="text-red-600 hover:underline">Drop</button></form>
+                            <form method="POST"><input type="hidden" name="drop_id" value="<?php echo htmlspecialchars($row['reg_id'], ENT_QUOTES, 'UTF-8'); ?>"><button type="submit" class="text-red-600 hover:underline">Drop</button></form>
                         </td>
                     </tr>
                     <?php endwhile; ?>

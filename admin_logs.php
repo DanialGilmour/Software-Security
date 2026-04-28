@@ -25,11 +25,11 @@ $logs = mysqli_query($conn, "SELECT l.*, u.email FROM activity_logs l LEFT JOIN 
             <tbody>
                 <?php while($l = mysqli_fetch_assoc($logs)): ?>
                 <tr class="border-t">
-                    <td class="p-4"><?php echo $l['created_at']; ?></td>
-                    <td><?php echo $l['email'] ?? 'System'; ?></td>
-                    <td class="font-bold"><?php echo $l['action']; ?></td>
-                    <td><?php echo $l['description']; ?></td>
-                    <td class="text-gray-500"><?php echo $l['ip_address']; ?></td>
+                    <td class="p-4"><?php echo htmlspecialchars($l['created_at'], ENT_QUOTES, 'UTF-8'); ?></td>
+                    <td><?php echo htmlspecialchars($l['email'] ?? 'System', ENT_QUOTES, 'UTF-8'); ?></td>
+                    <td class="font-bold"><?php echo htmlspecialchars($l['action'], ENT_QUOTES, 'UTF-8'); ?></td>
+                    <td><?php echo htmlspecialchars($l['description'], ENT_QUOTES, 'UTF-8'); ?></td>
+                    <td class="text-gray-500"><?php echo htmlspecialchars($l['ip_address'], ENT_QUOTES, 'UTF-8'); ?></td>
                 </tr>
                 <?php endwhile; ?>
             </tbody>

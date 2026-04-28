@@ -33,19 +33,22 @@ $students = mysqli_query($conn, "SELECT id, name, email FROM users WHERE role = 
     <div class="space-y-8">
         <?php while($s = mysqli_fetch_assoc($students)): ?>
         <div class="bg-white p-6 rounded shadow">
-            <h3 class="font-bold text-lg mb-2"><?php echo $s['name']; ?> <span class="text-gray-500 font-normal">(<?php echo $s['email']; ?>)</span></h3>
+            <h3 class="font-bold text-lg mb-2"><?php echo htmlspecialchars($s['name'], ENT_QUOTES, 'UTF-8'); ?> <span class="text-gray-500 font-normal">(<?php echo htmlspecialchars($s['email'], ENT_QUOTES, 'UTF-8'); ?>)</span></h3>
             
             <?php
             $sid = $s['id'];
-            $regs = mysqli_query($conn, "SELECT r.id, s.code, s.name, r.grade FROM registrations r JOIN subjects s ON r.subject_id = s.id WHERE r.user_id = $sid");
+            $stmt = mysqli_prepare($conn, "SELECT r.id, s.code, s.name, r.grade FROM registrations r JOIN subjects s ON r.subject_id = s.id WHERE r.user_id = ?");
+            mysqli_stmt_bind_param($stmt, "i", $sid);
+            mysqli_stmt_execute($stmt);
+            $regs = mysqli_stmt_get_result($stmt);
             ?>
             <table class="w-full text-left text-sm">
                 <thead><tr class="text-gray-500"><th>Course</th><th>Current Grade</th><th>Assign Grade</th></tr></thead>
                 <tbody>
                     <?php while($r = mysqli_fetch_assoc($regs)): ?>
                     <tr class="border-t py-1">
-                        <td><?php echo $r['code']; ?> - <?php echo $r['name']; ?></td>
-                        <td><?php echo $r['grade'] ?? 'Pending'; ?></td>
+                        <td><?php echo htmlspecialchars($r['code'], ENT_QUOTES, 'UTF-8'); ?> - <?php echo htmlspecialchars($r['name'], ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td><?php echo htmlspecialchars($r['grade'] ?? 'Pending', ENT_QUOTES, 'UTF-8'); ?></td>
                         <td>
                             <?php if ($can_grade): ?>
                             <form method="POST" class="flex gap-2">
