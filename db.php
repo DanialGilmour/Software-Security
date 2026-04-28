@@ -14,7 +14,7 @@ session_start();
 
 function logActivity($user_id, $action, $description = "") {
     global $conn;
-    $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+    $ip = $_SERVER['REMOTE_ADDR'];
     $stmt = mysqli_prepare($conn, "INSERT INTO activity_logs (user_id, action, description, ip_address) VALUES (?, ?, ?, ?)");
     mysqli_stmt_bind_param($stmt, "isss", $user_id, $action, $description, $ip);
     mysqli_stmt_execute($stmt);
