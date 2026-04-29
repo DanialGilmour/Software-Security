@@ -9,6 +9,11 @@ if (!isset($_SESSION['user_id']) || !hasRole(['registrar', 'clerk', 'lecturer'])
 $can_grade = hasRole(['registrar', 'clerk']);
 
 if (isset($_POST['assign_grade'])) {
+
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die("CSRF token mismatch.");
+    }
+
     $reg_id = $_POST['reg_id'];
     $grade = $_POST['grade'];
     $stmt = mysqli_prepare($conn, "UPDATE registrations SET grade = ? WHERE id = ?");
@@ -55,6 +60,7 @@ $students = mysqli_query($conn, "SELECT id, name, email FROM users WHERE role = 
                         <td>
                             <?php if ($can_grade): ?>
                             <form method="POST" class="flex gap-2">
+                                <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                                 <input type="hidden" name="reg_id" value="<?php echo $r['id']; ?>">
                                 <select name="grade" class="border rounded px-1">
                                     <option value="A" <?php echo $r['grade']=='A'?'selected':'';?>>A</option>

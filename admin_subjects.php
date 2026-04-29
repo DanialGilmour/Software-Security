@@ -8,6 +8,11 @@ if (!isset($_SESSION['user_id']) || !hasRole(['registrar', 'clerk', 'lecturer'])
 
 $can_edit = hasRole(['registrar', 'clerk']);
 
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die("CSRF token mismatch.");
+    }
+
 if (isset($_POST['add_subject'])) {
     $code = $_POST['code'];
     $name = $_POST['name'];
@@ -20,7 +25,9 @@ if (isset($_POST['add_subject'])) {
 
 if (isset($_POST['delete_id'])) {
     $id = $_POST['delete_id'];
-    mysqli_query($conn, "DELETE FROM subjects WHERE id = $id");
+    $stmt = mysqli_prepare($conn, "DELETE FROM subjects WHERE id = ?");
+    mysqli_stmt_bind_param($stmt, "i", $id);
+    mysqli_stmt_execute($stmt);
     logActivity($_SESSION['user_id'], "DELETE_SUBJECT", "Deleted subject ID $id");
 }
 

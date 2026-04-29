@@ -6,7 +6,14 @@ if (isset($_SESSION['user_id'])) {
     exit();
 }
 
+$error = "";
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die("Security Error: CSRF token mismatch. Please refresh the page.");
+    }
+
     $email = $_POST['email'];
     $password = $_POST['password'];
 
@@ -17,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     if ($user = mysqli_fetch_assoc($result)) {
         if (password_verify($password, $user['password'])) {
+            session_regenerate_id(true);
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_name'] = $user['name'];
             $_SESSION['user_role'] = $user['role'];
@@ -42,6 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <p class="text-red-500 mb-4"><?php echo $error; ?></p>
         <?php endif; ?>
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+            
             <div class="mb-4">
                 <label class="block mb-1">Email</label>
                 <input type="email" name="email" required class="w-full border p-2 rounded">

@@ -10,6 +10,10 @@ $success = "";
 $error = "";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['register_user'])) {
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die("CSRF mismatch");
+    }
+
     $name = $_POST['name'];
     $email = $_POST['email'];
     $password = password_hash($_POST['password'], PASSWORD_BCRYPT);
@@ -96,8 +100,8 @@ $users = mysqli_query($conn, "SELECT id, name, email, role FROM users ORDER BY i
                     <?php while($row = mysqli_fetch_assoc($users)): ?>
                     <tr class="border-b">
                         <td class="p-2 font-mono font-bold"><?php echo $row['id']; ?></td>
-                        <td><?php echo $row['name']; ?></td>
-                        <td><?php echo $row['email']; ?></td>
+                        <td><?php echo e($row['name']); ?></td>
+                        <td><?php echo e($row['email']); ?></td>
                         <td>
                             <span class="px-2 py-1 rounded text-xs font-bold <?php echo $row['role']=='admin'?'bg-purple-100 text-purple-700':'bg-green-100 text-green-700';?>">
                                 <?php echo strtoupper($row['role']); ?>
