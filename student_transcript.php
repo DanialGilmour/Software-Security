@@ -7,8 +7,13 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 'student') {
 }
 
 $user_id = $_SESSION['user_id'];
-$query = "SELECT s.code, s.name, s.credit_hours, r.grade FROM registrations r JOIN subjects s ON r.subject_id = s.id WHERE r.user_id = $user_id";
-$result = mysqli_query($conn, $query);
+$stmt = mysqli_prepare($conn, "SELECT s.code, s.name, s.credit_hours, r.grade 
+                                FROM registrations r 
+                                JOIN subjects s ON r.subject_id = s.id 
+                                WHERE r.user_id = ?");
+mysqli_stmt_bind_param($stmt, "i", $user_id);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
 
 // Simple CGPA Calc
 $total_points = 0; $total_credits = 0;
