@@ -8,31 +8,43 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 'student') {
 
 $user_id = $_SESSION['user_id'];
 
-// Handle Registration
-if (isset($_POST['register_id'])) {
-    $sub_id = $_POST['register_id'];
-    $stmt = mysqli_prepare($conn, "INSERT INTO registrations (user_id, subject_id) VALUES (?, ?)");
-    mysqli_stmt_bind_param($stmt, "ii", $user_id, $sub_id);
-    mysqli_stmt_execute($stmt);
-    logActivity($user_id, "REGISTER_COURSE", "Registered for course ID: $sub_id");
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // GLOBAL CSRF CHECK
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die("CSRF validation failed.");
+    }
+
+    // Handle Registration
+    if (isset($_POST['register_id'])) {
+        $sub_id = $_POST['register_id'];
+        $stmt = mysqli_prepare($conn, "INSERT INTO registrations (user_id, subject_id) VALUES (?, ?)");
+        mysqli_stmt_bind_param($stmt, "ii", $user_id, $sub_id);
+        mysqli_stmt_execute($stmt);
+        logActivity($user_id, "REGISTER_COURSE", "Course ID: $sub_id");
+    }
+
+    // Handle Drop
+    if (isset($_POST['drop_id'])) {
+        $reg_id = $_POST['drop_id'];
+        // SECURE: Only delete if the registration belongs to the logged-in user
+        $stmt = mysqli_prepare($conn, "DELETE FROM registrations WHERE id = ? AND user_id = ?");
+        mysqli_stmt_bind_param($stmt, "ii", $reg_id, $user_id);
+        mysqli_stmt_execute($stmt);
+        logActivity($user_id, "DROP_COURSE", "Registration ID: $reg_id");
+    }
 }
 
-// Handle Drop
-if (isset($_POST['drop_id'])) {
-    $reg_id = $_POST['drop_id'];
-    $stmt = mysqli_prepare($conn, "DELETE FROM registrations WHERE id = ? AND user_id = ?");
-    mysqli_stmt_bind_param($stmt, "ii", $reg_id, $user_id);
-    mysqli_stmt_execute($stmt);
-    logActivity($user_id, "DROP_COURSE", "Dropped registration ID: $reg_id");
-}
+// Get available subjects safely
+$stmt_avail = mysqli_prepare($conn, "SELECT * FROM subjects WHERE id NOT IN (SELECT subject_id FROM registrations WHERE user_id = ?)");
+mysqli_stmt_bind_param($stmt_avail, "i", $user_id);
+mysqli_stmt_execute($stmt_avail);
+$available = mysqli_stmt_get_result($stmt_avail);
 
-// Get available subjects (not yet registered)
-$query = "SELECT * FROM subjects WHERE id NOT IN (SELECT subject_id FROM registrations WHERE user_id = $user_id)";
-$available = mysqli_query($conn, $query);
-
-// Get my subjects
-$query = "SELECT r.id as reg_id, s.code, s.name, s.credit_hours FROM registrations r JOIN subjects s ON r.subject_id = s.id WHERE r.user_id = $user_id";
-$my_subjects = mysqli_query($conn, $query);
+// Get my subjects safely
+$stmt_my = mysqli_prepare($conn, "SELECT r.id as reg_id, s.code, s.name, s.credit_hours FROM registrations r JOIN subjects s ON r.subject_id = s.id WHERE r.user_id = ?");
+mysqli_stmt_bind_param($stmt_my, "i", $user_id);
+mysqli_stmt_execute($stmt_my);
+$my_subjects = mysqli_stmt_get_result($stmt_my);
 ?>
 <!DOCTYPE html>
 <html lang="en">
